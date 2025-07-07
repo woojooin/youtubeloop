@@ -89,7 +89,7 @@
         </style>
       `;
 
-      // Try to embed the video with mute first (for mobile compatibility)
+      // Try to embed the video
       const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
 
       const iframe = document.createElement('iframe');
@@ -104,17 +104,6 @@
       // Clear loading and add iframe
       container.innerHTML = '';
       container.appendChild(iframe);
-
-      // Add mute/unmute button for mobile
-      const audioButton = document.createElement('div');
-      audioButton.style.cssText = 'text-align: center; margin-top: 1rem;';
-      audioButton.innerHTML = `
-        <button onclick="toggleAudio('${videoId}')" 
-                style="padding: 0.5rem 1rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
-          🔊 소리 켜기
-        </button>
-      `;
-      container.appendChild(audioButton);
 
       // Always add ListenOnRepeat button
       const redirectButton = document.createElement('div');
@@ -143,62 +132,6 @@
           console.log('CORS error during check, but video might be working');
         }
       }, 3000);
-    }
-
-    function toggleAudio(videoId) {
-      // Create a new iframe without mute parameter
-      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}`;
-
-      const iframe = document.createElement('iframe');
-      iframe.src = embedUrl;
-      iframe.allow = "autoplay; encrypted-media";
-      iframe.allowFullscreen = true;
-      iframe.style.width = '100%';
-      iframe.style.aspectRatio = '16 / 9';
-      iframe.style.border = 'none';
-      iframe.style.marginTop = '1.5rem';
-
-      // Replace the current iframe
-      const container = document.getElementById('playerContainer');
-      const currentIframe = container.querySelector('iframe');
-      if (currentIframe) {
-        container.replaceChild(iframe, currentIframe);
-      }
-
-      // Update the button text
-      const audioButton = container.querySelector('button[onclick*="toggleAudio"]');
-      if (audioButton) {
-        audioButton.innerHTML = '🔇 소리 끄기';
-        audioButton.onclick = () => toggleMute(videoId);
-      }
-    }
-
-    function toggleMute(videoId) {
-      // Create a new iframe with mute parameter
-      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
-
-      const iframe = document.createElement('iframe');
-      iframe.src = embedUrl;
-      iframe.allow = "autoplay; encrypted-media";
-      iframe.allowFullscreen = true;
-      iframe.style.width = '100%';
-      iframe.style.aspectRatio = '16 / 9';
-      iframe.style.border = 'none';
-      iframe.style.marginTop = '1.5rem';
-
-      // Replace the current iframe
-      const container = document.getElementById('playerContainer');
-      const currentIframe = container.querySelector('iframe');
-      if (currentIframe) {
-        container.replaceChild(iframe, currentIframe);
-      }
-
-      // Update the button text
-      const audioButton = container.querySelector('button[onclick*="toggleMute"]');
-      if (audioButton) {
-        audioButton.innerHTML = '🔊 소리 켜기';
-        audioButton.onclick = () => toggleAudio(videoId);
-      }
     }
 
     function redirectToListenOnRepeat(videoId) {
