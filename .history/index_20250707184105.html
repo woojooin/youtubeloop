@@ -26,14 +26,6 @@
       flex-wrap: wrap;
     }
 
-    .button-row {
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
-
     input {
       flex: 1 1 60%;
       min-width: 200px;
@@ -62,11 +54,8 @@
 
     <div class="input-row">
       <input type="text" id="ytUrl" placeholder="Paste YouTube link here" onkeypress="handleEnter(event)" />
-    </div>
-    
-    <div class="button-row">
-      <button onclick="pasteFromClipboard()">📋 Paste</button>
       <button onclick="handleLoop()">▶ Play Loop</button>
+      <button onclick="pasteFromClipboard()">📋 Paste</button>
       <button onclick="clearInput()">🗑️ Clear</button>
     </div>
 

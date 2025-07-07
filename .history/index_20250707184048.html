@@ -26,14 +26,6 @@
       flex-wrap: wrap;
     }
 
-    .button-row {
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
-
     input {
       flex: 1 1 60%;
       min-width: 200px;
@@ -62,11 +54,8 @@
 
     <div class="input-row">
       <input type="text" id="ytUrl" placeholder="Paste YouTube link here" onkeypress="handleEnter(event)" />
-    </div>
-    
-    <div class="button-row">
-      <button onclick="pasteFromClipboard()">📋 Paste</button>
       <button onclick="handleLoop()">▶ Play Loop</button>
+      <button onclick="pasteFromClipboard()">📋 Paste</button>
       <button onclick="clearInput()">🗑️ Clear</button>
     </div>
 
@@ -254,18 +243,9 @@
       currentVideoId = null;
     }
 
-    async function pasteFromClipboard() {
-      try {
-        const clipboardText = await navigator.clipboard.readText();
-        if (clipboardText && extractVideoId(clipboardText)) {
-          document.getElementById('ytUrl').value = clipboardText;
-        } else {
-          alert('클립보드에 유효한 YouTube 링크가 없습니다.');
-        }
-      } catch (error) {
-        alert('클립보드에 접근할 수 없습니다. 수동으로 붙여넣기 해주세요.');
-        console.log('Clipboard access denied:', error);
-      }
+    function pasteFromClipboard() {
+      // Implementation for pasting from clipboard
+      console.log('Paste from clipboard');
     }
 
     window.onload = () => {
@@ -273,8 +253,24 @@
       if (paramUrl) {
         document.getElementById('ytUrl').value = paramUrl;
         handleLoopFromUrl(paramUrl);
+      } else {
+        // Check clipboard for YouTube URL
+        checkClipboardForYouTubeUrl();
       }
     };
+
+    async function checkClipboardForYouTubeUrl() {
+      try {
+        const clipboardText = await navigator.clipboard.readText();
+        if (clipboardText && extractVideoId(clipboardText)) {
+          document.getElementById('ytUrl').value = clipboardText;
+          // Don't auto-play, just fill the input
+        }
+      } catch (error) {
+        // Clipboard access might be denied, ignore silently
+        console.log('Clipboard access denied or not available');
+      }
+    }
   </script>
 </body>
 
