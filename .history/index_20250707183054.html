@@ -45,6 +45,35 @@
       aspect-ratio: 16 / 9;
       border: none;
     }
+
+    .play-button {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 0, 0, 0.9);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      z-index: 1000;
+      display: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .play-button:hover {
+      background: rgba(255, 0, 0, 1);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .player-wrapper {
+      position: relative;
+      margin-top: 1.5rem;
+    }
   </style>
 </head>
 
@@ -60,6 +89,8 @@
 
     <div id="playerContainer"></div>
   </div>
+
+  <button id="playButton" class="play-button" onclick="playWithSound()">▶</button>
 
   <script>
     let currentVideoId = null;
@@ -148,6 +179,59 @@
           console.log('CORS error during check, but video might be working');
         }
       }, 3000);
+    }
+
+    function playWithSound() {
+      if (!currentVideoId) return;
+      
+      // Show the iframe
+      const container = document.getElementById('playerContainer');
+      const iframe = container.querySelector('iframe');
+      if (iframe) {
+        iframe.style.display = 'block';
+      }
+
+      // Show the audio toggle button
+      const audioButton = container.querySelector('div');
+      if (audioButton) {
+        audioButton.style.display = 'block';
+      }
+
+      // Show the ListenOnRepeat button
+      const redirectButton = container.querySelectorAll('div')[1];
+      if (redirectButton) {
+        redirectButton.style.display = 'block';
+      }
+
+      // Create a new iframe with sound and autoplay
+      const embedUrl = `https://www.youtube.com/embed/${currentVideoId}?autoplay=1&loop=1&playlist=${currentVideoId}`;
+
+      const newIframe = document.createElement('iframe');
+      newIframe.src = embedUrl;
+      newIframe.allow = "autoplay; encrypted-media";
+      newIframe.allowFullscreen = true;
+      newIframe.style.width = '100%';
+      newIframe.style.aspectRatio = '16 / 9';
+      newIframe.style.border = 'none';
+      newIframe.style.marginTop = '1.5rem';
+
+      // Replace the current iframe
+      if (iframe) {
+        container.replaceChild(newIframe, iframe);
+      }
+
+      // Hide the play button
+      const playButton = document.getElementById('playButton');
+      playButton.style.display = 'none';
+
+      // Update the audio toggle button to show OFF state
+      const audioToggleBtn = document.getElementById('audioToggleBtn');
+      if (audioToggleBtn) {
+        audioToggleBtn.innerHTML = '🔇 Sound OFF';
+        audioToggleBtn.style.color = '#dc3545';
+        audioToggleBtn.style.borderColor = '#dc3545';
+        audioToggleBtn.onclick = () => toggleMute(currentVideoId);
+      }
     }
 
     function toggleAudio(videoId) {
@@ -239,6 +323,7 @@
     function clearInput() {
       document.getElementById('ytUrl').value = '';
       document.getElementById('playerContainer').innerHTML = '';
+      document.getElementById('playButton').style.display = 'none';
       currentVideoId = null;
     }
 

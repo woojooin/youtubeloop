@@ -45,6 +45,35 @@
       aspect-ratio: 16 / 9;
       border: none;
     }
+
+    .play-button {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 0, 0, 0.9);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      z-index: 1000;
+      display: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .play-button:hover {
+      background: rgba(255, 0, 0, 1);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .player-wrapper {
+      position: relative;
+      margin-top: 1.5rem;
+    }
   </style>
 </head>
 
@@ -60,6 +89,8 @@
 
     <div id="playerContainer"></div>
   </div>
+
+  <button id="playButton" class="play-button" onclick="playWithSound()">▶</button>
 
   <script>
     let currentVideoId = null;
@@ -94,8 +125,8 @@
         </style>
       `;
 
-      // Create iframe with sound and autoplay directly
-      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}`;
+      // Create iframe with mute first (for mobile compatibility)
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&mute=1&loop=1&playlist=${videoId}`;
 
       const iframe = document.createElement('iframe');
       iframe.src = embedUrl;
@@ -109,6 +140,10 @@
       // Clear loading and add iframe
       container.innerHTML = '';
       container.appendChild(iframe);
+
+      // Show the play button
+      const playButton = document.getElementById('playButton');
+      playButton.style.display = 'block';
 
       // Add mute/unmute button for mobile
       const audioButton = document.createElement('div');
@@ -148,6 +183,42 @@
           console.log('CORS error during check, but video might be working');
         }
       }, 3000);
+    }
+
+    function playWithSound() {
+      if (!currentVideoId) return;
+      
+      // Create a new iframe with sound and autoplay
+      const embedUrl = `https://www.youtube.com/embed/${currentVideoId}?autoplay=1&loop=1&playlist=${currentVideoId}`;
+
+      const iframe = document.createElement('iframe');
+      iframe.src = embedUrl;
+      iframe.allow = "autoplay; encrypted-media";
+      iframe.allowFullscreen = true;
+      iframe.style.width = '100%';
+      iframe.style.aspectRatio = '16 / 9';
+      iframe.style.border = 'none';
+      iframe.style.marginTop = '1.5rem';
+
+      // Replace the current iframe
+      const container = document.getElementById('playerContainer');
+      const currentIframe = container.querySelector('iframe');
+      if (currentIframe) {
+        container.replaceChild(iframe, currentIframe);
+      }
+
+      // Hide the play button
+      const playButton = document.getElementById('playButton');
+      playButton.style.display = 'none';
+
+      // Update the audio toggle button to show OFF state
+      const audioButton = document.getElementById('audioToggleBtn');
+      if (audioButton) {
+        audioButton.innerHTML = '🔇 Sound OFF';
+        audioButton.style.color = '#dc3545';
+        audioButton.style.borderColor = '#dc3545';
+        audioButton.onclick = () => toggleMute(currentVideoId);
+      }
     }
 
     function toggleAudio(videoId) {
@@ -239,6 +310,7 @@
     function clearInput() {
       document.getElementById('ytUrl').value = '';
       document.getElementById('playerContainer').innerHTML = '';
+      document.getElementById('playButton').style.display = 'none';
       currentVideoId = null;
     }
 

@@ -45,6 +45,35 @@
       aspect-ratio: 16 / 9;
       border: none;
     }
+
+    .play-button {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      background: rgba(255, 0, 0, 0.9);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 2rem;
+      cursor: pointer;
+      z-index: 1000;
+      display: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .play-button:hover {
+      background: rgba(255, 0, 0, 1);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .player-wrapper {
+      position: relative;
+      margin-top: 1.5rem;
+    }
   </style>
 </head>
 
@@ -239,6 +268,7 @@
     function clearInput() {
       document.getElementById('ytUrl').value = '';
       document.getElementById('playerContainer').innerHTML = '';
+      document.getElementById('playButton').style.display = 'none';
       currentVideoId = null;
     }
 
