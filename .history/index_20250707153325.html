@@ -166,13 +166,13 @@
         container.replaceChild(iframe, currentIframe);
       }
 
-      // Update the button text and onclick - toggle to OFF
+      // Update the button text and onclick
       const audioButton = document.getElementById('audioToggleBtn');
       if (audioButton) {
-        audioButton.innerHTML = '🔇 Sound OFF';
-        audioButton.style.color = '#dc3545';
-        audioButton.style.borderColor = '#dc3545';
-        audioButton.onclick = () => toggleMute(videoId);
+        audioButton.innerHTML = '🔊 Sound ON';
+        audioButton.style.color = '#28a745';
+        audioButton.style.borderColor = '#28a745';
+        audioButton.onclick = () => toggleAudio(videoId);
       }
     }
 
@@ -196,13 +196,13 @@
         container.replaceChild(iframe, currentIframe);
       }
 
-      // Update the button text and onclick - toggle to ON
+      // Update the button text and onclick
       const audioButton = document.getElementById('audioToggleBtn');
       if (audioButton) {
-        audioButton.innerHTML = '🔊 Sound ON';
-        audioButton.style.color = '#28a745';
-        audioButton.style.borderColor = '#28a745';
-        audioButton.onclick = () => toggleAudio(videoId);
+        audioButton.innerHTML = '🔇 Sound OFF';
+        audioButton.style.color = '#dc3545';
+        audioButton.style.borderColor = '#dc3545';
+        audioButton.onclick = () => toggleMute(videoId);
       }
     }
 
