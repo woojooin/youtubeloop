@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Loop</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2rem;
+      margin: 0;
+      background: #f9f9f9;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .input-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    input {
+      flex: 1 1 60%;
+      min-width: 200px;
+      padding: 0.6rem;
+      font-size: 1rem;
+    }
+
+    button {
+      flex: 0 0 auto;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+    }
+
+    iframe {
+      margin-top: 1.5rem;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: none;
+    }
+
+    #thumbnail {
+      margin-top: 1.2rem;
+      max-width: 80%;
+      height: auto;
+      border-radius: 8px;
+      display: none;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>YouTube Loop Player</h1>
+
+    <div class="input-row">
+      <input type="text" id="ytUrl" placeholder="Paste YouTube link here" oninput="updateThumbnail()" />
+      <button onclick="handleLoop()">▶ Play Loop</button>
+    </div>
+
+    <div id="playerContainer"></div>
+
+    <img id="thumbnail" alt="YouTube Thumbnail" />
+  </div>
+
+  <script>
+    function extractVideoId(url) {
+      try {
+        const parsed = new URL(url);
+        if (parsed.hostname.includes('youtu.be')) {
+          return parsed.pathname.slice(1);
+        }
+        return parsed.searchParams.get('v');
+      } catch {
+        return null;
+      }
+    }
+
+    function checkEmbeddable(videoId, callback) {
+      const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+      fetch(oembedUrl)
+        .then((res) => {
+          callback(res.ok); // true if embeddable, false if not
+        })
+        .catch(() => callback(false));
+    }
+
+    function createCustomPlayer(videoId) {
+      // Create a custom player interface that tries multiple approaches
+      const container = document.getElementById('playerContainer');
+      container.innerHTML = `
+        <div style="padding: 2rem; background: #f8f9fa; border-radius: 8px; margin-top: 1rem; text-align: center;">
+          <h3>동영상 재생 옵션</h3>
+          <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+            <button onclick="tryEmbedMethod('${videoId}', 'standard')" 
+                    style="padding: 0.8rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              🎥 표준 임베드로 재생
+            </button>
+            <button onclick="tryEmbedMethod('${videoId}', 'minimal')" 
+                    style="padding: 0.8rem; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              🎬 최소 설정으로 재생
+            </button>
+            <button onclick="tryEmbedMethod('${videoId}', 'manual')" 
+                    style="padding: 0.8rem; background: #ffc107; color: black; border: none; border-radius: 4px; cursor: pointer;">
+              ⏯️ 수동 재생 (클릭 필요)
+            </button>
+            <button onclick="window.open('https://listenonrepeat.com/watch?v=${videoId}&autoplay=1', '_blank')" 
+                    style="padding: 0.8rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              🔗 ListenOnRepeat에서 재생
+            </button>
+            <button onclick="window.open('https://www.youtube.com/watch?v=${videoId}', '_blank')" 
+                    style="padding: 0.8rem; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+              📺 YouTube에서 직접 재생
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function autoPlayVideo(videoId) {
+      // Try to auto-play with standard embed first
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&enablejsapi=1&origin=${window.location.origin}`;
+
+      const iframe = document.createElement('iframe');
+      iframe.src = embedUrl;
+      iframe.allow = "autoplay; encrypted-media";
+      iframe.allowFullscreen = true;
+      iframe.style.width = '100%';
+      iframe.style.aspectRatio = '16 / 9';
+      iframe.style.border = 'none';
+      iframe.style.marginTop = '1.5rem';
+
+      const container = document.getElementById('playerContainer');
+      container.innerHTML = '';
+      container.appendChild(iframe);
+
+      // Check if the video loads successfully
+      setTimeout(() => {
+        try {
+          // Try to detect if the video is actually playable
+          if (iframe.contentWindow && iframe.contentWindow.location.href.includes('youtube.com/sorry')) {
+            // Video is restricted, show custom player
+            createCustomPlayer(videoId);
+          }
+        } catch (e) {
+          // CORS error, but iframe might still work
+          console.log('CORS error, but continuing...');
+        }
+      }, 2000);
+    }
+
+    function tryEmbedMethod(videoId, method) {
+      let embedUrl;
+
+      switch (method) {
+        case 'standard':
+          embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&enablejsapi=1&origin=${window.location.origin}`;
+          break;
+        case 'minimal':
+          embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
+          break;
+        case 'manual':
+          embedUrl = `https://www.youtube.com/embed/${videoId}?mute=1&loop=1&playlist=${videoId}`;
+          break;
+        default:
+          embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
+      }
+
+      const iframe = document.createElement('iframe');
+      iframe.src = embedUrl;
+      iframe.allow = "autoplay; encrypted-media";
+      iframe.allowFullscreen = true;
+      iframe.style.width = '100%';
+      iframe.style.aspectRatio = '16 / 9';
+      iframe.style.border = 'none';
+      iframe.style.marginTop = '1.5rem';
+
+      const container = document.getElementById('playerContainer');
+      container.innerHTML = '';
+      container.appendChild(iframe);
+
+      // Add a fallback message
+      setTimeout(() => {
+        if (iframe.contentWindow && iframe.contentWindow.location.href.includes('youtube.com/sorry')) {
+          container.innerHTML = `
+            <div style="padding: 2rem; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; margin-top: 1rem; text-align: center;">
+              <p>⚠️ 이 동영상은 임베드 재생이 제한되어 있습니다.</p>
+              <button onclick="createCustomPlayer('${videoId}')" 
+                      style="padding: 0.5rem 1rem; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 0.5rem;">
+                다른 방법 시도하기
+              </button>
+            </div>
+          `;
+        }
+      }, 3000);
+    }
+
+    function redirectToListenOnRepeat(videoId) {
+      const url = `https://listenonrepeat.com/watch?v=${videoId}&autoplay=1`;
+      window.location.href = url;
+    }
+
+    function handleLoop() {
+      const url = document.getElementById('ytUrl').value.trim();
+      handleLoopFromUrl(url);
+    }
+
+    function handleLoopFromUrl(url) {
+      const videoId = extractVideoId(url);
+      if (!videoId) {
+        alert("Invalid YouTube URL");
+        return;
+      }
+
+      // Always show the custom player interface instead of checking embeddable
+      createCustomPlayer(videoId);
+    }
+
+    function updateThumbnail() {
+      const input = document.getElementById('ytUrl').value.trim();
+      const videoId = extractVideoId(input);
+      const thumb = document.getElementById('thumbnail');
+      if (videoId) {
+        const image = new Image();
+        image.onload = () => {
+          thumb.src = image.src;
+          thumb.style.display = 'block';
+        };
+        image.onerror = () => {
+          thumb.style.display = 'none';
+        };
+        image.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      } else {
+        thumb.style.display = 'none';
+      }
+    }
+
+    window.onload = () => {
+      const paramUrl = new URLSearchParams(window.location.search).get('url');
+      if (paramUrl) {
+        document.getElementById('ytUrl').value = paramUrl;
+        updateThumbnail();
+        handleLoopFromUrl(paramUrl);
+      }
+    };
+  </script>
+</body>
+
+</html>

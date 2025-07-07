@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Loop</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2rem;
+      margin: 0;
+      background: #f9f9f9;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .input-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    input {
+      flex: 1 1 60%;
+      min-width: 200px;
+      padding: 0.6rem;
+      font-size: 1rem;
+    }
+
+    button {
+      flex: 0 0 auto;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+    }
+
+    iframe {
+      margin-top: 1.5rem;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: none;
+    }
+
+    #thumbnail {
+      margin-top: 1.2rem;
+      max-width: 80%;
+      height: auto;
+      border-radius: 8px;
+      display: none;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>YouTube Loop Player</h1>
+
+    <div class="input-row">
+      <input type="text" id="ytUrl" placeholder="Paste YouTube link here" oninput="updateThumbnail()" />
+      <button onclick="handleLoop()">▶ Play Loop</button>
+    </div>
+
+    <div id="playerContainer"></div>
+
+    <img id="thumbnail" alt="YouTube Thumbnail" />
+  </div>
+
+  <script>
+    function extractVideoId(url) {
+      try {
+        const parsed = new URL(url);
+        if (parsed.hostname.includes('youtu.be')) {
+          return parsed.pathname.slice(1);
+        }
+        return parsed.searchParams.get('v');
+      } catch {
+        return null;
+      }
+    }
+
+    function playVideo(videoId) {
+      // First check if the video is embeddable using oEmbed API
+      checkVideoEmbeddable(videoId);
+    }
+
+    function checkVideoEmbeddable(videoId) {
+      const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+
+      // Show loading state
+      const container = document.getElementById('playerContainer');
+      container.innerHTML = `
+        <div style="padding: 2rem; text-align: center; margin-top: 1rem;">
+          <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          <p style="margin-top: 1rem;">동영상 정보를 확인 중...</p>
+        </div>
+        <style>
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        </style>
+      `;
+
+      fetch(oembedUrl)
+        .then(response => {
+          if (response.ok) {
+            // Video is embeddable, try to play it
+            embedAndPlayVideo(videoId);
+          } else {
+            // Video is not embeddable, redirect to ListenOnRepeat
+            console.log('Video is not embeddable according to oEmbed API');
+            redirectToListenOnRepeat(videoId);
+          }
+        })
+        .catch(error => {
+          console.log('Error checking video embeddable status:', error);
+          // If oEmbed check fails, try to embed anyway
+          embedAndPlayVideo(videoId);
+        });
+    }
+
+    function embedAndPlayVideo(videoId) {
+      // Show loading state
+      const container = document.getElementById('playerContainer');
+      container.innerHTML = `
+        <div style="padding: 2rem; text-align: center; margin-top: 1rem;">
+          <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #007bff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+          <p style="margin-top: 1rem;">동영상을 로딩 중...</p>
+        </div>
+        <style>
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        </style>
+      `;
+
+      // Try to embed the video
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}`;
+
+      const iframe = document.createElement('iframe');
+      iframe.src = embedUrl;
+      iframe.allow = "autoplay; encrypted-media";
+      iframe.allowFullscreen = true;
+      iframe.style.width = '100%';
+      iframe.style.aspectRatio = '16 / 9';
+      iframe.style.border = 'none';
+      iframe.style.marginTop = '1.5rem';
+
+      // Clear loading and add iframe
+      container.innerHTML = '';
+      container.appendChild(iframe);
+
+      // Add a manual redirect button
+      const redirectButton = document.createElement('div');
+      redirectButton.style.cssText = 'text-align: center; margin-top: 1rem;';
+      redirectButton.innerHTML = `
+        <button onclick="redirectToListenOnRepeat('${videoId}')" 
+                style="padding: 0.5rem 1rem; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+          🔗 ListenOnRepeat에서 재생
+        </button>
+      `;
+      container.appendChild(redirectButton);
+
+      // Check if the video loads successfully using a more reliable method
+      setTimeout(() => {
+        // Try to detect if the video is actually playing by checking iframe events
+        let shouldRedirect = false;
+
+        // Method 1: Check if iframe loaded without errors
+        iframe.onload = () => {
+          console.log('Iframe loaded successfully');
+        };
+
+        iframe.onerror = () => {
+          console.log('Iframe failed to load');
+          shouldRedirect = true;
+        };
+
+        // Method 2: Try to detect YouTube error pages (limited due to CORS)
+        try {
+          if (iframe.contentWindow) {
+            const iframeUrl = iframe.contentWindow.location.href;
+            if (iframeUrl.includes('youtube.com/sorry') ||
+              iframeUrl.includes('youtube.com/oops')) {
+              console.log('YouTube error page detected');
+              shouldRedirect = true;
+            }
+          }
+        } catch (e) {
+          // CORS error, but continue
+          console.log('CORS error during URL check');
+        }
+
+        // Method 3: Check if the video is actually playing after a delay
+        setTimeout(() => {
+          if (shouldRedirect) {
+            console.log('Video is not working, redirecting to ListenOnRepeat');
+            redirectToListenOnRepeat(videoId);
+          } else {
+            console.log('Video appears to be working fine');
+            // Add a success indicator only when video is actually working
+            const successMsg = document.createElement('div');
+            successMsg.style.cssText = 'text-align: center; margin-top: 0.5rem; color: #28a745; font-size: 0.9rem;';
+            successMsg.innerHTML = '✅ 동영상이 정상적으로 재생되고 있습니다';
+            container.appendChild(successMsg);
+          }
+        }, 2000);
+
+      }, 2000);
+    }
+
+    function redirectToListenOnRepeat(videoId) {
+      const url = `https://listenonrepeat.com/watch?v=${videoId}&autoplay=1`;
+      window.location.href = url;
+    }
+
+    function handleLoop() {
+      const url = document.getElementById('ytUrl').value.trim();
+      handleLoopFromUrl(url);
+    }
+
+    function handleLoopFromUrl(url) {
+      const videoId = extractVideoId(url);
+      if (!videoId) {
+        alert("Invalid YouTube URL");
+        return;
+      }
+
+      // Try to play video, if it fails, redirect to ListenOnRepeat
+      playVideo(videoId);
+    }
+
+    function updateThumbnail() {
+      const input = document.getElementById('ytUrl').value.trim();
+      const videoId = extractVideoId(input);
+      const thumb = document.getElementById('thumbnail');
+      if (videoId) {
+        const image = new Image();
+        image.onload = () => {
+          thumb.src = image.src;
+          thumb.style.display = 'block';
+        };
+        image.onerror = () => {
+          thumb.style.display = 'none';
+        };
+        image.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      } else {
+        thumb.style.display = 'none';
+      }
+    }
+
+    window.onload = () => {
+      const paramUrl = new URLSearchParams(window.location.search).get('url');
+      if (paramUrl) {
+        document.getElementById('ytUrl').value = paramUrl;
+        updateThumbnail();
+        handleLoopFromUrl(paramUrl);
+      }
+    };
+  </script>
+</body>
+
+</html>
