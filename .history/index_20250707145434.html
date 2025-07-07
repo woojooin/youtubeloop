@@ -53,7 +53,7 @@
     <h1>YouTube Loop Player</h1>
 
     <div class="input-row">
-      <input type="text" id="ytUrl" placeholder="Paste YouTube link here" onkeypress="handleEnter(event)" />
+      <input type="text" id="ytUrl" placeholder="Paste YouTube link here" />
       <button onclick="handleLoop()">▶ Play Loop</button>
     </div>
 
@@ -110,7 +110,7 @@
       audioButton.style.cssText = 'text-align: center; margin-top: 1rem;';
       audioButton.innerHTML = `
         <button id="audioToggleBtn" onclick="toggleAudio('${videoId}')" 
-                style="padding: 0.8rem 1.5rem; background: transparent; color: #28a745; border: 2px solid #28a745; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: all 0.2s ease;">
+                style="padding: 0.8rem 1.5rem; background: #f8f9fa; color: #495057; border: 1px solid #dee2e6; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s ease;">
           🔊 소리 켜기
         </button>
       `;
@@ -121,7 +121,7 @@
       redirectButton.style.cssText = 'text-align: center; margin-top: 0.5rem;';
       redirectButton.innerHTML = `
         <button onclick="redirectToListenOnRepeat('${videoId}')" 
-                style="padding: 0.8rem 1.5rem; background: transparent; color: #007bff; border: 2px solid #007bff; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: all 0.2s ease;">
+                style="padding: 0.8rem 1.5rem; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s ease;">
           🔄 Try Again
         </button>
       `;
@@ -165,8 +165,8 @@
         container.replaceChild(iframe, currentIframe);
       }
 
-      // Update the button text and onclick
-      const audioButton = document.getElementById('audioToggleBtn');
+      // Update the button text
+      const audioButton = container.querySelector('button[onclick*="toggleAudio"]');
       if (audioButton) {
         audioButton.innerHTML = '🔇 소리 끄기';
         audioButton.onclick = () => toggleMute(videoId);
@@ -193,8 +193,8 @@
         container.replaceChild(iframe, currentIframe);
       }
 
-      // Update the button text and onclick
-      const audioButton = document.getElementById('audioToggleBtn');
+      // Update the button text
+      const audioButton = container.querySelector('button[onclick*="toggleMute"]');
       if (audioButton) {
         audioButton.innerHTML = '🔊 소리 켜기';
         audioButton.onclick = () => toggleAudio(videoId);
@@ -219,12 +219,6 @@
       }
 
       playVideo(videoId);
-    }
-
-    function handleEnter(event) {
-      if (event.key === "Enter") {
-        handleLoop();
-      }
     }
 
     window.onload = () => {
