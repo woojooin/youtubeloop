@@ -12,6 +12,8 @@
       padding: 2rem;
       margin: 0;
       background: #f9f9f9;
+      color: #333;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .container {
@@ -39,12 +41,33 @@
       min-width: 200px;
       padding: 0.6rem;
       font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      color: #333;
+      transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #007bff;
     }
 
     button {
       flex: 0 0 auto;
       padding: 0.6rem 1rem;
       font-size: 1rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background: #0056b3;
+      transform: translateY(-1px);
     }
 
     iframe {
@@ -52,6 +75,52 @@
       width: 100%;
       aspect-ratio: 16 / 9;
       border: none;
+    }
+
+    /* 다크모드 스타일 */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #1a1a1a;
+        color: #ffffff;
+      }
+
+      input {
+        background: #2d2d2d;
+        color: #ffffff;
+        border-color: #444;
+      }
+
+      input:focus {
+        border-color: #4a9eff;
+      }
+
+      button {
+        background: #4a9eff;
+      }
+
+      button:hover {
+        background: #3a8eef;
+      }
+
+      /* 다크모드에서 Sound OFF 버튼 오렌지색 */
+      #audioToggleBtn {
+        color: #ff8c00 !important;
+        border-color: #ff8c00 !important;
+      }
+
+      #audioToggleBtn:hover {
+        background: rgba(255, 140, 0, 0.1) !important;
+      }
+
+      /* 다크모드에서 ListenOnRepeat 버튼 더 밝은 파란색 */
+      button[onclick*="redirectToListenOnRepeat"] {
+        color: #66b3ff !important;
+        border-color: #66b3ff !important;
+      }
+
+      button[onclick*="redirectToListenOnRepeat"]:hover {
+        background: rgba(102, 179, 255, 0.1) !important;
+      }
     }
   </style>
 </head>
